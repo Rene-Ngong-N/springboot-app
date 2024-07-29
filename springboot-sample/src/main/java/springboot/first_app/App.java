@@ -9,26 +9,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @EnableAutoConfiguration
-public class App
+public class App {
+    @Value("hello welcome to team Jarvis CI")
+    private String message;
 
+    @RequestMapping("/")
+    String home() {
+        return message;
+    }
 
-{     
-	@Value("hello")
-	private String message;
-	
+    @RequestMapping("/display")
+    String home2() {
+        return message + " world";
+    }
 
-	@RequestMapping("/")
-	String home() {
-		return message;
-	}
-
-	@RequestMapping("/display")
-	String home2() {
-		return message + " world";
-	}
-
-	public static void main( String[] args )
-	{
-		SpringApplication.run(App.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(App.class, args);
+    }
 }
