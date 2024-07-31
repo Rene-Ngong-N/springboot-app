@@ -1,43 +1,41 @@
 version: 0.2
 
+env:
+  variables:
+    REPOSITORY_URI: 339713006307.dkr.ecr.us-east-1.amazonaws.com/sample-springboot
+    AWS_DEFAULT_REGION: us-east-1
+
 phases:
   install:
+    runtime-versions:
+      java: corretto11
     commands:
       - echo Installing dependencies...
-      - apt-get update
-      - apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-      - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-      - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-      - apt-get update
-      - apt-get install -y docker-ce
-      - apt-get install -y awscli
+      - yum update -y
+      - yum install -y docker
+      - service docker start
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/sample-springboot
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
   build:
     commands:
       - cd springboot-sample
+      - mvn clean package
       - mvn checkstyle:check
       - mvn test
-      - mvn clean package
-      - echo Build started on `date`
-      - echo Building the Docker image...
+      - echo "All tests completed"
+      - echo "Building the Docker image..."
       - docker build -t sample-springboot .
       - docker tag sample-springboot:latest $REPOSITORY_URI:latest
       - docker tag sample-springboot:latest $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo Pushing the Docker image to ECR...
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Saving Docker image as tar file...
-      - docker save -o sample-springboot.tar sample-springboot:latest
+      - echo "Pushing the Docker image to ECR..."
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
 artifacts:
   files:
     - target/sample-app-0.0.1-SNAPSHOT.jar
   discard-paths: yes
-  base-directory: ./
-  name: docker-images/my-sample-appimages.tar
+  base-directory: springboot-sample
