@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @EnableAutoConfiguration
 public class App {
-    @Value("hello welcome to team Jarvis CI")
+    @Value("hello welcome to Renita world CI")
     private String message;
 
     @RequestMapping("/")
